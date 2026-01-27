@@ -6,7 +6,7 @@ const { TOTAL_ELEVATORS } = config;
 
 export default class View {
   elevators: Elevator[] = [];
-  waitingPassengers: Passenger[] = [];
+  passengers: Passenger[] = [];
 
   constructor() {
     this.createScene();
@@ -22,8 +22,7 @@ export default class View {
   public createPassenger(passengerData: IPassenger): void {
     const { id, startFloor, targetFloor } = passengerData;
     const passenger = new Passenger(id, startFloor, targetFloor);
-    this.waitingPassengers.push(passenger);
-    console.log(`Passenger generated at floor ${startFloor} wanting to go to floor ${targetFloor}.`);
+    this.passengers.push(passenger);
   }
 
   public setElevatorIdle(elevatorId: number): void {

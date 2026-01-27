@@ -8,11 +8,12 @@ import Elevator from "./components/elevator";
 const { TOTAL_FLOORS, ELEVATOR_CAPACITY } = config;
 
 export default class Model {
-  public passengers: number = 0;
+  public passengersNum: number = 0;
   public passengersServed: number = 0;
   public timeElapsed: number = 0;
   private controller: Controller;
-
+  private passengers: IPassenger[] = [];
+  waitingPassengers: IPassenger[] = [];
   constructor(controller: Controller) {
     this.controller = controller;
   }
@@ -26,12 +27,15 @@ export default class Model {
     } while (targetFloor === startFloor);
 
     if (debugMode) {
-      startFloor = testDaata[this.passengers][0];
-      targetFloor = testDaata[this.passengers][1];
+      startFloor = testDaata[this.passengersNum][0];
+      targetFloor = testDaata[this.passengersNum][1];
     }
-    this.passengers++;
+    let direction = targetFloor > startFloor ? "up" : ("down" as "up" | "down");
 
-    return { id, startFloor, targetFloor };
+    this.passengersNum++;
+    this.passengers.push({ id, startFloor, targetFloor, direction });
+
+    return { id, startFloor, targetFloor, direction };
   }
 
   public operateElevators(elevators: Elevator[], waitingPassengers: Passenger[]): void {

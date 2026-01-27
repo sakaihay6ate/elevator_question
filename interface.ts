@@ -2,6 +2,7 @@ export interface IPassenger {
   id: number;
   startFloor: number;
   targetFloor: number;
+  direction: "up" | "down";
 }
 
 export interface IElevator {
