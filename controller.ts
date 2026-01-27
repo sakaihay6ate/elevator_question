@@ -1,6 +1,8 @@
 import Model from "./model";
 import View from "./view";
 import config from "./constants";
+import { IElevator, IPassenger } from "./interface";
+
 const { TOTAL_PASSENGERS } = config;
 export default class Controller {
   // Controller class implementation
@@ -12,11 +14,16 @@ export default class Controller {
     this.view = new View();
   }
 
+  public createScene(): void {
+    this.model.createElevators();
+    this.view.createScene();
+  }
+
   public startSimulation(): void {
     const interval = setInterval(() => {
       this.model.timeElapsed++;
       console.log(`\n--- Time Elapsed: ${this.model.timeElapsed} seconds ---`);
-      if (this.model.passengers < TOTAL_PASSENGERS) {
+      if (this.model.passengersNum < TOTAL_PASSENGERS) {
         this.generatePassenger(this.model.timeElapsed);
       }
       this.operateElevators();
@@ -42,7 +49,25 @@ export default class Controller {
   }
 
   public operateElevators(): void {
-    this.model.operateElevators(this.view.elevators, this.view.waitingPassengers);
+    this.model.operateElevators(this.view.elevators);
+  }
+  public moveElevatorToFloor(elevatorId: number, targetFloor: number): void {
+    const elevator = this.view.elevators.find((e) => e.id === elevatorId);
+    if (elevator) {
+      elevator.moveToFloor({
+        id: elevatorId,
+        currentFloor: elevator.currentFloor,
+        targetFloors: elevator.targetFloors,
+        passengers: elevator.passengers,
+        direction: elevator.direction,
+        servedPassengersCount: elevator.servedPassengersCount,
+      });
+    }
+  }
+
+  loadPassengers(elevator: IElevator, passenger: IPassenger): void {
+    //todo: view處理載入乘客的動畫
+    console.log(`Passenger ${passenger.id} boarded Elevator ${elevator.id} at floor ${elevator.currentFloor}.`);
   }
 
   private checkPassengersServed(): void {

@@ -1,7 +1,7 @@
 import config from "./constants";
 import { debugMode, testDaata } from "./constants";
 import Controller from "./controller";
-import { IPassenger } from "./interface";
+import { IElevator, IPassenger } from "./interface";
 import Passenger from "./components/passenger";
 import Elevator from "./components/elevator";
 
@@ -14,8 +14,24 @@ export default class Model {
   private controller: Controller;
   private passengers: IPassenger[] = [];
   waitingPassengers: IPassenger[] = [];
+  elevators: IElevator[] = [];
+
   constructor(controller: Controller) {
     this.controller = controller;
+  }
+
+  public createElevators(): IElevator[] {
+    for (let i = 0; i < config.TOTAL_ELEVATORS; i++) {
+      this.elevators.push({
+        id: i + 1,
+        currentFloor: 1,
+        targetFloors: new Set<number>(),
+        passengers: [],
+        direction: "idle",
+        servedPassengersCount: 0,
+      });
+    }
+    return this.elevators;
   }
 
   public createPassenger(id: number): IPassenger {
@@ -38,16 +54,17 @@ export default class Model {
     return { id, startFloor, targetFloor, direction };
   }
 
-  public operateElevators(elevators: Elevator[], waitingPassengers: Passenger[]): void {
+  public operateElevators(elevators: Elevator[]): void {
+    let waitingPassengers = this.waitingPassengers;
     elevators.forEach((elevator) => {
       //如果乘客的startFloor在當前樓層並且不與電梯方向反向，則讓乘客上電梯
       //如果有乘客上電梯或下電梯，則停留在當前樓層處理 沒有人上下電梯才移動
       //先放人才接人,不能用!(放人||接人)因為如果有放人就不會判斷是否需要接人
-      if (!elevator.unloadPassengers() && !elevator.loadPassengers(waitingPassengers)) {
+      if (!this.unloadPassengers() && !this.loadPassengers(elevator,waitingPassengers)) {
         //如果有乘客，則前往他們的目標樓層
-        if (elevator.passengers.length > 0) {
-          const targetFloor = elevator.passengers[0].targetFloor;
-          elevator.moveToFloor(targetFloor);
+        if (this.passengers.length > 0) {
+          const targetFloor = this.passengers[0].targetFloor;
+          this.moveToFloor(targetFloor);
         } else if (waitingPassengers.length > 0) {
           //如果沒有乘客，則往等待乘客的樓層移動
           //IIFE 找一個不會被其他電梯接走的乘客 有空再另外拉出來
@@ -76,7 +93,7 @@ export default class Model {
   }
 
   //檢查是否有乘客在電梯會經過的路徑或方向上
-  public checkWaitingPassengers(passenger: Passenger): boolean {
+  public checkWaitingPassengers(passenger: IPassenger): boolean {
     const { startFloor, direction } = passenger;
     let canBePicked = false;
     this.controller.view.elevators.forEach((elevator) => {
@@ -99,5 +116,57 @@ export default class Model {
       }
     });
     return canBePicked;
+  }
+
+  public moveToFloor(elevator: IElevator, targetFloor: number): void {
+    let currentFloor = elevator.currentFloor;
+    if (currentFloor < targetFloor) {
+      currentFloor++;
+    } else {
+      currentFloor--;
+    }
+    elevator.direction = currentFloor < targetFloor ? "up" : currentFloor > targetFloor ? "down" : "idle";
+    this.controller.moveElevatorToFloor(elevator.id, targetFloor);
+  }
+
+  public loadPassengers(elevator: IElevator, waitingPassengers: IPassenger[]): boolean {
+    for (let i = waitingPassengers.length - 1; i >= 0; i--) {
+      const passenger = waitingPassengers[i];
+      if (passenger.direction === elevator.direction || elevator.direction === "idle") {
+        if (passenger.startFloor === elevator.currentFloor && elevator.passengers.length < ELEVATOR_CAPACITY) {
+          elevator.passengers.push(passenger);
+          elevator.targetFloors.add(passenger.targetFloor);
+          waitingPassengers.splice(i, 1);
+          this.controller.loadPassengers(elevator, passenger);
+          return true;
+        }
+      }
+    }
+    return false;
+  }
+
+    public unloadPassengers(): boolean {
+    let isUnloaded = false;
+    for (let i = this.passengers.length - 1; i >= 0; i--) {
+      const passenger = this.passengers[i];
+      if (passenger.targetFloor === this.currentFloor) {
+        this.passengers.splice(i, 1);
+        this.servedPassengersCount++;
+        console.log(`Passenger ${passenger.id} exited Elevator ${this.id} at floor ${this.currentFloor}.`);
+        isUnloaded = true;
+      }
+    }
+    if (isUnloaded) {
+      this.targetFloors.delete(this.currentFloor);
+    }
+    return isUnloaded;
+  }
+
+  setElevatorIdle(elevatorId: number): void {
+    const elevator = this.elevators.find((e) => e.id === elevatorId);
+    if (elevator) {
+      elevator.direction = "idle";
+      this.controller.setElevatorIdle(elevatorId);
+    }
   }
 }

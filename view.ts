@@ -1,6 +1,6 @@
-import config from "./constants";
 import Elevator from "./components/elevator";
 import Passenger from "./components/passenger";
+import config from "./constants";
 import { IPassenger } from "./interface";
 const { TOTAL_ELEVATORS } = config;
 
@@ -9,7 +9,7 @@ export default class View {
   passengers: Passenger[] = [];
 
   constructor() {
-    this.createScene();
+    console.log("View initialized");
   }
 
   public createScene(): void {
@@ -27,9 +27,6 @@ export default class View {
 
   public setElevatorIdle(elevatorId: number): void {
     const elevator = this.elevators.find((e) => e.id === elevatorId);
-    if (elevator) {
-      elevator.direction = "idle";
-      console.log(`Elevator ${elevatorId} is now idle.`);
-    }
+    elevator?.setElevatorIdle();
   }
 }
