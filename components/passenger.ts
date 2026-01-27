@@ -10,4 +10,5 @@ export default class Passenger {
     this.targetFloor = targetFloor;
     this.direction = targetFloor > startFloor ? "up" : "down";
   }
+
 }

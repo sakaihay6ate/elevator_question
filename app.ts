@@ -13,72 +13,16 @@
 // 3.請描述設計概念、物件、函式的功能
 // 4.模擬真實電梯的運作情況，為電梯的運行制訂策略，並盡可能優化演算法，讓電梯變的更有效率
 // 5. 盡可能讓程式可以執行，並印出log以顯示電梯與乘客的變化
-import Elevator from "./components/elevator";
-import Passenger from "./components/passenger";
-import config, { debugMode } from "./constants";
-const { TOTAL_FLOORS, TOTAL_ELEVATORS, TOTAL_PASSENGERS } = config;
-const testDaata = [
-  [1, 10],
-  [9, 2],
-];
+import Controller from "./controller";
+
 class MainApp {
-  private elevators: Elevator[] = [];
-  private waitingPassengers: Passenger[] = [];
-  private timeElapsed: number = 0;
-  private passengersServed: number = 0;
-  private passengers: number = 0;
+  public controller: Controller;
 
   constructor() {
-    for (let i = 0; i < TOTAL_ELEVATORS; i++) {
-      this.elevators.push(new Elevator(i + 1));
-    }
-  }
-
-  public startSimulation(): void {
-    const interval = setInterval(() => {
-      this.timeElapsed++;
-      console.log(`\n--- Time Elapsed: ${this.timeElapsed} seconds ---`);
-      if (this.passengers < TOTAL_PASSENGERS) {
-        this.generatePassenger();
-      }
-      this.elevators.forEach((elevator) => {
-        elevator.operate(this.waitingPassengers);
-      });
-
-      this.checkPassengersServed();
-      console.log(`Total passengers served: ${this.passengersServed}/${TOTAL_PASSENGERS}`);
-
-      if (this.passengersServed >= TOTAL_PASSENGERS) {
-        clearInterval(interval);
-        console.log(`Simulation ended in ${this.timeElapsed} seconds.`);
-      }
-    }, 10);
-  }
-
-  private generatePassenger(): void {
-    let startFloor = Math.floor(Math.random() * TOTAL_FLOORS) + 1;
-    let targetFloor: number;
-    do {
-      targetFloor = Math.floor(Math.random() * TOTAL_FLOORS) + 1;
-    } while (targetFloor === startFloor);
-    if (debugMode) {
-      startFloor = testDaata[this.passengers][0];
-      targetFloor = testDaata[this.passengers][1];
-    }
-
-    const passenger = new Passenger(this.timeElapsed, startFloor, targetFloor);
-    this.waitingPassengers.push(passenger);
-    this.passengers++;
-    console.log(`Passenger generated at floor ${startFloor} wanting to go to floor ${targetFloor}.`);
-  }
-
-  private checkPassengersServed(): void {
-    this.elevators.forEach((elevator) => {
-      this.passengersServed += elevator.getServedPassengersCount();
-    });
+    this.controller = new Controller();
   }
 }
 
 // Start the simulation
 const app = new MainApp();
-app.startSimulation();
+app.controller.startSimulation();

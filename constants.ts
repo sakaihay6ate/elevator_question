@@ -6,5 +6,10 @@ const config = {
 };
 export const debugMode = false;
 
+export const testDaata: [number, number][] = [
+  [1, 10],
+  [9, 2],
+];
+
 
 export default config;

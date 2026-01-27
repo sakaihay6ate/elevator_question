@@ -4,7 +4,10 @@
   "main": "index.js",
   "author": "richie",
   "license": "MIT",
-    "dependencies": {
+  "scripts": {
+    "start": "npx tsx app.ts"
+    },
+  "dependencies": {
     "ts-node": "^10.9.2"
   },
   "devDependencies": {
